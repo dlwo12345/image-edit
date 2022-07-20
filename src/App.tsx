@@ -99,7 +99,7 @@ function App() {
             <Route exact path={`/fabricclippath`} component={FabricClipPathComponent} />
             <Route exact path={`/fabricalert`} component={FabricAlertComponent} />
             <Route exact path={`/`}>
-              <Redirect to="/image" />
+              <Redirect to="/fabric2" />
             </Route>
           </Switch>
         </React.Suspense>
