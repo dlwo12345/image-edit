@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { fabric } from "fabric";
+import { fabric } from "fabric-with-gestures";
+import "./canvas_gestures.mixin.js";
+import "./test.css";
 
 const canvasWidth = 1300; // 캔버스 width
 const canvasHeight = 650; // 캔버스 height
@@ -31,12 +33,70 @@ const Fabric2Component: React.FC = () => {
       backgroundColor: "#fff",
     });
 
+    const info: any = document.getElementById("testtextarea");
     // 편집 이미지 수치가 미세하게 틀어지는 이슈로 인한 반올림 수치 조정
     // ref: https://stackoverflow.com/questions/24874670/loading-from-json-objects-not-scaled
     fabric.Object.NUM_FRACTION_DIGITS = 17;
 
-    canvas.on("history:append", () => {
-      forceUpdate();
+    // canvas.on("mouse:wheel", (opt: any) => {
+    //   console.log("opt", opt);
+    //   var text = document.createTextNode("mouse:wheel");
+    //   info.insertBefore(text, info.firstChild);
+    // });
+    // canvas.on("history:append", (opt: any) => {
+    //   forceUpdate();
+    //   console.log("opt", opt);
+    //   var text = document.createTextNode(" Gesture ");
+    //   info.insertBefore(text, info.firstChild);
+    // });
+
+    canvas.on("mouse:wheel", (opt: any) => {
+      console.log("opt", opt);
+      console.log("opt.d");
+      // var text = document.createTextNode(JSON.stringify(opt));
+      // // info.insertBefore(text, info.firstChild);
+
+      // var item = document.createElement("li");
+      // item.appendChild(text);
+      // info.appendChild(item);
+    });
+    function stringifyEvent(e: any) {
+      const obj: any = {};
+      for (let k in e) {
+        obj[k] = e[k];
+      }
+      return JSON.stringify(
+        obj,
+        (k, v) => {
+          if (v instanceof Node) return "Node";
+          if (v instanceof Window) return "Window";
+          return v;
+        },
+        " "
+      );
+    }
+
+    canvas.on("touch:gesture", (opt: any) => {
+      const scaleSelf = opt.self.scale;
+      const target = opt.target;
+
+      if (scaleSelf && target && target.scaleX && target.scaleY) {
+        target.scaleX = target.scaleX * scaleSelf;
+        target.scaleY = target.scaleY * scaleSelf;
+        if (target.scaleX < 0.1) {
+          target.scaleX = 0.1;
+          target.scaleY = 0.1;
+        }
+        // constrain
+        if (target.scaleX > 0.5) {
+          target.scaleX = 0.5;
+          target.scaleY = 0.5;
+        }
+
+        // target.setCoords();
+        canvas.renderAll();
+        return false;
+      }
     });
 
     const clipPath = new fabric.Rect({
@@ -81,7 +141,7 @@ const Fabric2Component: React.FC = () => {
             cornerColor: "green",
             // scaleX: 360 / imgElement.width,
             // scaleY: 360 / imgElement.height,
-            scaleY: clipPathHeight / imgElement.height
+            scaleY: clipPathHeight / imgElement.height,
           });
           imgInstance.scaleToHeight(clipPathHeight * 1.2);
           canvas!.centerObject(imgInstance); // image 캔버스 중앙으로 이동
@@ -140,6 +200,7 @@ const Fabric2Component: React.FC = () => {
           </div>
         </div>
       </div>
+      <ul className="list" id="testtextarea"></ul>
       <button onClick={download}>다운로드</button>
     </>
   );
